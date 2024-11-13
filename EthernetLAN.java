@@ -3,16 +3,13 @@ import java.util.Queue;
 import java.util.Random;
 
 class Node {
-    Queue<Integer> queue = new LinkedList<>();
-    int queueSize;
-    int packetsDropped = 0;
+    private Queue<Integer> queue = new LinkedList<>();
+    private int queueSize, packetsDropped = 0;
 
-    // Constructor to initialize the node with a queue size
     Node(int size) {
         this.queueSize = size;
     }
 
-    // Method to send a packet; increment dropped packets if the queue is full
     void sendPacket(int packetId) {
         if (queue.size() < queueSize) {
             queue.add(packetId);
@@ -21,61 +18,53 @@ class Node {
         }
     }
 
-    // Method to receive (remove) a packet from the queue
     void receivePacket() {
-        if (!queue.isEmpty()) {
-            queue.poll();
-        }
+        if (!queue.isEmpty()) queue.poll();
     }
 
-    // Getter to retrieve the number of dropped packets
     int getDroppedPackets() {
         return packetsDropped;
     }
 
-    // Method to get the current number of packets in the queue (congestion window)
-    int getCurrentQueueSize() {
-        return queue.size();
+    public boolean isQueueEmpty() {
+        return queue.isEmpty();
     }
 }
 
 public class EthernetLAN {
     public static void main(String[] args) {
-        int numNodes = 5; // Number of nodes in the LAN
-        int queueSize = 3; // Maximum size of the queue in each node
-        int packetsToSend = 50; // Number of packets to be sent
-
-        Node[] nodes = new Node[numNodes]; // Array to hold the nodes
+        int numNodes = 5, queueSize = 3, packetsToSend = 50;
+        Node[] nodes = new Node[numNodes];
         Random rand = new Random();
 
-        // Initialize the nodes with the given queue size
-        for (int i = 0; i < numNodes; i++) {
-            nodes[i] = new Node(queueSize);
-        }
+        // Initialize nodes
+        for (int i = 0; i < numNodes; i++) nodes[i] = new Node(queueSize);
 
-        // Simulate the sending of packets
+        // Simulate sending packets
         for (int i = 0; i < packetsToSend; i++) {
-            int sender = rand.nextInt(numNodes); // Randomly select a sender node
+            int sender = rand.nextInt(numNodes);
             nodes[sender].sendPacket(i); // Send a packet
         }
 
-        // Simulate packet processing by each node
+        // Simulate packet processing
         for (Node node : nodes) {
             for (int j = 0; j < 5; j++) {
-                node.receivePacket(); // Each node processes 5 packets
+                if (!node.isQueueEmpty()) {
+                    node.receivePacket(); // Process packets
+                }
             }
         }
 
-        // Output the number of dropped packets for each node
+        // Output dropped packets for each node
         System.out.println("Dropped packets per node:");
         for (int i = 0; i < numNodes; i++) {
             System.out.println("Node " + i + ": " + nodes[i].getDroppedPackets());
         }
 
-        // Output the current congestion window for each node
-        System.out.println("\nCongestion Window (current packets in queue):");
+        // Congestion window simulation (for plotting)
+        System.out.println("\nCongestion Window:");
         for (int i = 0; i < numNodes; i++) {
-            System.out.println("Node " + i + " congestion window: " + nodes[i].getCurrentQueueSize());
+            System.out.println("Node " + i + " congestion window: " + (queueSize - nodes[i].getDroppedPackets()));
         }
     }
 }
